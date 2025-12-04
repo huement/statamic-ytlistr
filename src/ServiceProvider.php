@@ -82,7 +82,7 @@ class ServiceProvider extends BaseServiceProvider
       $nav
         ->create('YouTube Listr')
         ->section('Tools')
-        ->route('statamic-ytlistr.index') // <--- UPDATE THIS LINE
+        ->url(cp_route('statamic-ytlistr.index'))
         ->icon('video');
     });
   }

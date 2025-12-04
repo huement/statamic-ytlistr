@@ -49,13 +49,13 @@ class SyncController extends CpController
       }
 
       return redirect()
-        ->route('statamic.cp.ytlistr.index')
+        ->route('statamic.cp.statamic-ytlistr.index')
         ->with('success', "Successfully synced {$synced} videos from YouTube.");
     } catch (\Exception $e) {
       Log::error('YouTube sync failed: ' . $e->getMessage());
 
       return redirect()
-        ->route('statamic.cp.ytlistr.index')
+        ->route('statamic.cp.statamic-ytlistr.index')
         ->with('error', 'Sync failed: ' . $e->getMessage());
     }
   }
@@ -65,7 +65,7 @@ class SyncController extends CpController
     $video->delete();
 
     return redirect()
-      ->route('statamic.cp.ytlistr.index')
+      ->route('statamic.cp.statamic-ytlistr.index')
       ->with('success', 'Video deleted successfully.');
   }
 }
