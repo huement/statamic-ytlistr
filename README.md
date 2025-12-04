@@ -16,7 +16,18 @@ _Manage your YouTube videos directly from the Statamic Control Panel_
 
 ## Installation
 
-This is a local package for development. See the main application's README for setup instructions.
+You can install the package via Composer:
+
+```bash
+composer require huement/statamic-ytlistr
+```
+
+The package will automatically register itself with Statamic.
+
+### Requirements
+
+- PHP ^8.1
+- Statamic CMS ^5.0
 
 ## Configuration
 
