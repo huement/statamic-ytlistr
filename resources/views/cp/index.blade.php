@@ -1,161 +1,205 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Listr - Control Panel</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100">
-    <div class="min-h-screen py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Header -->
-            <div class="bg-white shadow rounded-lg p-6 mb-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h1 class="text-3xl font-bold text-gray-900">YouTube Listr</h1>
-                        @if($lastSync)
-                            <p class="text-sm text-gray-500 mt-1">Last synced: {{ $lastSync->diffForHumans() }}</p>
-                        @endif
-                    </div>
-                    @if($isConfigured)
-                        <form method="POST" action="{{ cp_route('ytlistr.sync') }}">
-                            @csrf
-                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow">
-                                Sync Videos from YouTube
-                            </button>
-                        </form>
-                    @endif
-                </div>
-            </div>
+@extends('statamic::layout')
+@section('title', 'YouTube Listr')
 
-            <!-- Config Warning -->
-            @if(!$isConfigured)
-                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-                        <div class="ml-3">
-                            <p class="text-sm text-yellow-700 font-semibold">Configuration Required</p>
-                            <p class="mt-1 text-sm text-yellow-700">Add these to your <code class="bg-yellow-100 px-1 rounded">.env</code> file:</p>
-                            <pre class="mt-2 text-xs bg-gray-800 text-green-400 p-3 rounded">YOUTUBE_API_KEY=your_api_key_here
-YOUTUBE_CHANNEL_ID=your_channel_id_here</pre>
-                        </div>
-                    </div>
-                </div>
-            @endif
+@section('content')
+    {{--
+        IMPORTANT: We use v-pre here to tell Vue.js to ignore this section.
+        Since you are using standard Blade syntax, this prevents Vue from
+        trying to "compile" your curly braces and crashing the page.
+    --}}
+    <div v-pre>
 
-            <!-- Success/Error Messages -->
-            @if(session('success'))
-                <div class="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
-                    <p class="text-sm text-green-700">{{ session('success') }}</p>
-                </div>
-            @endif
-
-            @if(session('error'))
-                <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
-                    <p class="text-sm text-red-700">{{ session('error') }}</p>
-                </div>
-            @endif
-
-            <!-- Videos Table -->
-            <div class="bg-white shadow rounded-lg overflow-hidden">
-                @if($videos->count() > 0)
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Video</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Published</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Views</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($videos as $video)
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center">
-                                            <img src="{{ $video->thumbnail_url }}" alt="{{ $video->title }}" class="h-12 w-20 object-cover rounded">
-                                            <div class="ml-4">
-                                                <a href="{{ $video->youtube_url }}" target="_blank" class="text-sm font-medium text-blue-600 hover:text-blue-800">
-                                                    {{ Str::limit($video->title, 60) }}
-                                                </a>
-                                                <p class="text-xs text-gray-500">{{ $video->video_id }}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ $video->published_at->format('M j, Y') }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ number_format($video->view_count) }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ gmdate('i:s', $video->duration) }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                        <form method="POST" action="{{ cp_route('ytlistr.destroy', $video->id) }}" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Delete this video?')">
-                                                Delete
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-
-                    @if($videos->hasPages())
-                        <div class="bg-white px-4 py-3 border-t border-gray-200">
-                            {{ $videos->links() }}
-                        </div>
-                    @endif
-                @else
-                    <div class="text-center py-12">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                        </svg>
-                        <h3 class="mt-2 text-sm font-medium text-gray-900">No videos</h3>
-                        <p class="mt-1 text-sm text-gray-500">Get started by syncing videos from YouTube.</p>
-                    </div>
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="mb-0">YouTube Listr</h1>
+                @if($lastSync)
+                    <p class="text-xs text-gray-500 mt-2">
+                        Last synced: {{ $lastSync->diffForHumans() }}
+                    </p>
                 @endif
             </div>
 
-            <!-- Usage Examples -->
-            <div class="bg-white shadow rounded-lg p-6 mt-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Usage in Templates</h3>
-                <div class="space-y-4">
-                    <div>
-                        <p class="text-sm font-medium text-gray-700 mb-2">List videos:</p>
-                        <pre class="bg-gray-800 text-green-400 p-3 rounded text-xs overflow-x-auto">&#123;&#123; yt_listr limit="5" &#125;&#125;
-    &lt;h3&gt;&#123;&#123; title &#125;&#125;&lt;/h3&gt;
-    &lt;a href="&#123;&#123; youtube_url &#125;&#125;"&gt;Watch&lt;/a&gt;
-&#123;&#123; /yt_listr &#125;&#125;</pre>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-700 mb-2">Get latest video:</p>
-                        <pre class="bg-gray-800 text-green-400 p-3 rounded text-xs overflow-x-auto">&#123;&#123; yt_listr:latest &#125;&#125;
-    &lt;h2&gt;&#123;&#123; title &#125;&#125;&lt;/h2&gt;
-&#123;&#123; /yt_listr:latest &#125;&#125;</pre>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-700 mb-2">Video count:</p>
-                        <pre class="bg-gray-800 text-green-400 p-3 rounded text-xs overflow-x-auto">Total: &#123;&#123; yt_listr:count &#125;&#125;</pre>
+            @if($isConfigured)
+                <form method="POST" action="{{ cp_route('statamic-ytlistr.sync') }}">
+                    @csrf
+                    <button type="submit" class="btn-primary">
+                        Sync Videos
+                    </button>
+                </form>
+            @endif
+        </div>
+
+        @if(!$isConfigured)
+            <div class="card p-4 mb-4 border-l-4 border-yellow-400 bg-yellow-50">
+                <div class="flex">
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700 font-bold">Configuration Required</p>
+                        <p class="mt-1 text-sm text-yellow-700">Add these to your .env file:</p>
+                        <pre class="mt-2 text-xs bg-gray-800 text-green-400 p-3 rounded">YOUTUBE_API_KEY=...
+YOUTUBE_CHANNEL_ID=...</pre>
                     </div>
                 </div>
             </div>
+        @endif
 
-            <!-- Back to CP Link -->
-            <div class="mt-6 text-center">
-                <a href="{{ cp_route('index') }}" class="text-sm text-blue-600 hover:text-blue-800">← Back to Control Panel</a>
+        @if(session('success'))
+            <div class="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg border border-green-200">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        <div class="card p-0 overflow-hidden">
+            @if($videos->count() > 0)
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Video</th>
+                            <th>Published</th>
+                            <th>Views</th>
+                            <th>Duration</th>
+                            <th class="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($videos as $video)
+                            <tr>
+                                <td>
+                                    <div class="flex items-center">
+                                        <img src="{{ $video->thumbnail_url }}" class="h-10 w-16 object-cover rounded mr-3">
+                                        <div>
+                                            <a href="https://youtu.be/{{ $video->video_id }}" target="_blank" class="text-blue-600 hover:underline font-medium text-sm">
+                                                {{ Str::limit($video->title, 50) }}
+                                            </a>
+                                            <div class="text-xs text-gray-500">{{ $video->video_id }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-sm">{{ $video->published_at->format('M j, Y') }}</td>
+                                <td class="text-sm">{{ number_format($video->view_count) }}</td>
+                                <td class="text-sm">{{ gmdate('i:s', $video->duration) }}</td>
+                                <td class="text-right">
+                                    <form method="POST" action="{{ cp_route('statamic-ytlistr.destroy', $video->id) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-500 hover:text-red-700 text-sm" onclick="return confirm('Remove this video?')">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+
+                @if($videos->hasPages())
+                    <div class="p-3 border-t">
+                        {{ $videos->links() }}
+                    </div>
+                @endif
+            @else
+                <div class="text-center py-12">
+                    <p class="text-gray-500">No videos found. Click Sync to get started.</p>
+                </div>
+            @endif
+        </div>
+
+        <div class="mt-8">
+            <h2 class="font-bold mb-2">Template Cheat Sheet</h2>
+            <div class="card p-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <span class="text-xs uppercase font-bold text-gray-500">Basic Loop</span>
+                        <pre class="bg-gray-800 text-white p-2 rounded mt-1 text-xs">@{{ yt_listr limit="5" }}
+  &lt;img src="@{{ thumbnail_url }}"&gt;
+  &lt;h3&gt;@{{ title }}&lt;/h3&gt;
+@{{ /yt_listr }}</pre>
+                    </div>
+                    <div>
+                        <span class="text-xs uppercase font-bold text-gray-500">Latest Video</span>
+                        <pre class="bg-gray-800 text-white p-2 rounded mt-1 text-xs">@{{ yt_listr:latest }}
+  &lt;h2&gt;@{{ title }}&lt;/h2&gt;
+  &lt;iframe src="@{{ embed_url }}"&gt;&lt;/iframe&gt;
+@{{ /yt_listr:latest }}</pre>
+                    </div>
+                    <div>
+                        <span class="text-xs uppercase font-bold text-gray-500">Video Count</span>
+                        <pre class="bg-gray-800 text-white p-2 rounded mt-1 text-xs">Total videos: @{{ yt_listr:count }}</pre>
+                    </div>
+                    <div>
+                        <span class="text-xs uppercase font-bold text-gray-500">Available Data Fields</span>
+                        <div class="bg-gray-100 p-2 rounded mt-1 text-xs">
+                            <div class="grid grid-cols-2 gap-1">
+                                <code class="text-blue-600">title</code>
+                                <code class="text-blue-600">video_id</code>
+                                <code class="text-blue-600">description</code>
+                                <code class="text-blue-600">thumbnail_url</code>
+                                <code class="text-blue-600">published_at</code>
+                                <code class="text-blue-600">duration</code>
+                                <code class="text-blue-600">duration_formatted</code>
+                                <code class="text-blue-600">view_count</code>
+                                <code class="text-blue-600">like_count</code>
+                                <code class="text-blue-600">comment_count</code>
+                                <code class="text-blue-600">youtube_url</code>
+                                <code class="text-blue-600">embed_url</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <!-- Package Info & Credits -->
+        <div class="mt-8 border-t pt-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Package Links -->
+                <div class="card p-4">
+                    <h3 class="font-bold text-sm mb-3 text-gray-700">Package Resources</h3>
+                    <div class="space-y-2">
+                        <a href="https://github.com/huement/statamic-ytlistr"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                            </svg>
+                            View on GitHub
+                        </a>
+                        <a href="https://packagist.org/packages/huement/statamic-ytlistr"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm6.441 13.441c-.586.586-1.536.586-2.121 0l-2.121-2.121c-.586-.586-.586-1.536 0-2.121l2.121-2.121c.586-.586 1.536-.586 2.121 0 .586.586.586 1.536 0 2.121l-1.06 1.061 1.06 1.06c.586.586.586 1.536 0 2.121zm-4.5 4.5c-.586.586-1.536.586-2.121 0L5.559 11.68c-.586-.586-.586-1.536 0-2.121l6.261-6.261c.586-.586 1.536-.586 2.121 0 .586.586.586 1.536 0 2.121L8.5 10.859l5.441 5.441c.586.586.586 1.536 0 2.121z"/>
+                            </svg>
+                            View on Packagist
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Credits -->
+                <div class="card p-4 bg-gradient-to-br from-blue-50 to-indigo-50">
+                    <h3 class="font-bold text-sm mb-2 text-gray-700">Sponsored & Created By</h3>
+                    <a href="https://huement.com"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="inline-block">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+                            </svg>
+                            <span class="text-lg font-bold text-blue-600 hover:text-blue-800">Huement.com</span>
+                        </div>
+                    </a>
+                    <p class="text-xs text-gray-600 mt-2">
+                        A software studio creating awesome content and exceptional web experiences.
+                    </p>
+                    <div class="mt-3 text-xs text-gray-500">
+                        <span class="font-medium">License:</span> MIT •
+                        <span class="font-medium">Version:</span> 1.0.0
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
-</body>
-</html>
+@endsection

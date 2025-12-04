@@ -2,6 +2,18 @@
 
 A Statamic addon that syncs YouTube videos from a channel to your local database and provides Antlers tags to display them.
 
+![Control Panel Interface](preview.png)
+_Manage your YouTube videos directly from the Statamic Control Panel_
+
+## Features
+
+- 🎥 Sync YouTube videos from any channel
+- 📊 View video stats (views, likes, duration)
+- 🏷️ Easy-to-use Antlers tags for frontend display
+- 🔄 Manual or automated syncing
+- 💾 Local database storage for fast access
+- 🎨 Clean Control Panel interface
+
 ## Installation
 
 This is a local package for development. See the main application's README for setup instructions.
@@ -21,10 +33,12 @@ YOUTUBE_MAX_RESULTS=50
 ### Sync Videos
 
 Via Control Panel:
+
 - Navigate to Tools > YouTube Listr
 - Click "Sync Videos from YouTube"
 
 Via Command Line:
+
 ```bash
 php artisan ytlistr:fetch
 php artisan ytlistr:fetch --limit=100
@@ -32,7 +46,11 @@ php artisan ytlistr:fetch --limit=100
 
 ### Antlers Tags
 
+![Frontend Display Example](preview-frontend.png)
+_Display your YouTube videos beautifully on the frontend_
+
 List all videos:
+
 ```antlers
 {{ yt_listr }}
     <h3>{{ title }}</h3>
@@ -43,6 +61,7 @@ List all videos:
 ```
 
 Limit results:
+
 ```antlers
 {{ yt_listr limit="5" }}
     <div>{{ title }}</div>
@@ -50,6 +69,7 @@ Limit results:
 ```
 
 Get latest video:
+
 ```antlers
 {{ yt_listr:latest }}
     <h2>{{ title }}</h2>
@@ -58,6 +78,7 @@ Get latest video:
 ```
 
 Get video count:
+
 ```antlers
 Total videos: {{ yt_listr:count }}
 ```
@@ -65,6 +86,7 @@ Total videos: {{ yt_listr:count }}
 ## Available Data
 
 Each video provides:
+
 - `id` - Database ID
 - `video_id` - YouTube video ID
 - `title` - Video title
@@ -81,7 +103,16 @@ Each video provides:
 - `youtube_url` - Full YouTube URL
 - `embed_url` - YouTube embed URL
 
+## Credits
+
+Created and sponsored by [Huement.com](https://huement.com) - A software studio creating awesome content and exceptional web experiences.
+
+## Links
+
+- [GitHub Repository](https://github.com/huement/statamic-ytlistr)
+- [Packagist](https://packagist.org/packages/huement/statamic-ytlistr)
+- [Huement.com](https://huement.com)
+
 ## License
 
 MIT
-
