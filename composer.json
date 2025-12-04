@@ -1,0 +1,32 @@
+{
+  "name": "huement/statamic-ytlistr",
+  "description": "Statamic addon for syncing YouTube videos to a local database",
+  "type": "statamic-addon",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Huement",
+      "email": "info@huement.com"
+    }
+  ],
+  "require": {
+    "php": "^8.1",
+    "statamic/cms": "^5.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Huement\\StatamicYtListr\\": "src/"
+    }
+  },
+  "extra": {
+    "statamic": {
+      "name": "YouTube Listr",
+      "description": "Sync YouTube videos to your Statamic site"
+    },
+    "laravel": {
+      "providers": [
+        "Huement\\StatamicYtListr\\ServiceProvider"
+      ]
+    }
+  }
+}
