@@ -1,0 +1,185 @@
+I want you to generate a full Statamic 4 addon that automatically syncs all videos from a YouTube channel into my Laravel/Statamic project.
+
+ADDON NAME:
+YouTubeSync
+
+TECH STACK:
+- Laravel 10
+- Statamic 4
+- PHP 8.2
+- Composer autoloading
+- Statamic Control Panel (Vue 2)
+
+GOAL OF THE ADDON:
+Build an addon that:
+1. Retrieves all video IDs from a channel’s Uploads playlist.
+2. Saves those video IDs locally in a custom Laravel database table.
+3. Periodically fetches updated metadata for all stored IDs.
+4. Provides two buttons in the Statamic Control Panel:
+   - “Fetch Latest Videos” → retrieves any new videos.
+   - “Update All Videos” → refreshes metadata for all existing videos.
+5. Stores all video data in an Eloquent table, NOT Statamic entries.
+6. Clears Statamic’s static cache whenever updates are made.
+7. Uses YOUTUBE_API_KEY and YOUTUBE_CHANNEL_ID from .env.
+
+DATABASE STORAGE:
+Create a migration + model for table: youtube_videos
+
+Columns:
+- id (auto)
+- video_id (string, unique)
+- title (string)
+- description (longText, nullable)
+- thumbnail_url (string, nullable)
+- published_at (datetime)
+- duration (string, nullable)
+- views (integer, nullable)
+- likes (integer, nullable)
+- status (string, nullable)
+- metadata_json (json, nullable)
+- created_at
+- updated_at
+
+Create an Eloquent model: YouTubeVideo.
+
+YOUTUBE API REQUIREMENTS:
+Use:
+1. channels.list → part=contentDetails to get uploads playlist ID.
+2. playlistItems.list → part=contentDetails to get all video IDs (handle pagination).
+3. videos.list → part=snippet,contentDetails,statistics,status to fetch metadata (batch up to 50 IDs).
+
+Service classes required:
+- YouTubeApiService.php
+- VideoSyncService.php
+They must:
+- Fetch ALL video IDs.
+- Compare with local DB and insert ONLY new videos.
+- Chunk existing IDs in batches of 50 and refresh metadata.
+- Store only changed fields.
+- Clear Statamic cache afterwards.
+
+ADDON STRUCTURE TO GENERATE:
+
+/addons/YouTubeSync/
+    composer.json
+    YouTubeSyncServiceProvider.php
+
+    routes/cp.php
+    src/
+        Controllers/SyncController.php
+        YouTubeApiService.php
+        VideoSyncService.php
+        Models/YouTubeVideo.php
+        Commands/FetchLatestVideos.php
+        Commands/UpdateAllVideos.php
+    resources/
+        js/cp/YouTubeSync.vue
+        views/index.antlers.html
+    config/youtube-sync.php
+
+CONTROL PANEL UI:
+Create a CP page at /cp/youtube-sync.
+
+The page should:
+- Show heading “YouTube Sync”
+- Show last run timestamps for:
+  - Last “Fetch Latest”
+  - Last “Update Metadata”
+- Display success/error messages
+- Include two buttons:
+  - Fetch Latest Videos
+  - Update All Videos
+
+Buttons POST to:
+POST /cp/youtube-sync/fetch-latest
+POST /cp/youtube-sync/update-all
+
+Controller should call the sync services.
+
+ARTISAN COMMANDS:
+1. youtube:fetch-latest
+2. youtube:update-all
+
+Both use the same service classes.
+
+CONFIG FILE:
+config/youtube-sync.php:
+
+return [
+    'api_key' => env('YOUTUBE_API_KEY'),
+    'channel_id' => env('YOUTUBE_CHANNEL_ID'),
+];
+
+CACHING:
+After any sync or metadata update:
+- Clear Statamic cache: \Statamic\Facades\Stache::clear();
+
+DELIVERABLES:
+Generate ALL of the following with fully working code (no pseudocode):
+- Folder structure
+- composer.json
+- Service provider
+- All PHP service classes
+- Eloquent model
+- Migration
+- CP routes
+- CP controller
+- Vue component
+- Commands
+- Config file
+
+Write full *real working code* for every file.
+
+
+
+
+===================================================
+REFINED PROMPT
+===================================================
+
+
+
+
+I am building a distributable Statamic Addon as a local composer package.
+The host app is Laravel 11 with Statamic 5.
+
+CONTEXT:
+I am developing this inside a `packages/` folder in my root directory.
+- Vendor Name: huement
+- Package Name: statamic-ytlistr
+- Namespace: Huement\StatamicYtListr
+- Directory: packages/huement/statamic-ytlistr/
+
+GOAL:
+Generate the files for a Statamic Addon that syncs YouTube videos to a local database table and provides an Antlers tag.
+
+FILES NEEDED:
+1. `composer.json` (CRITICAL):
+   - Must define "name": "huement/statamic-ytlistr"
+   - Must use PSR-4 autoloading: "Huement\\StatamicYtListr\\" mapped to "src/"
+   - Must use Laravel Package Discovery in the "extra" block so `Huement\StatamicYtListr\ServiceProvider` loads automatically.
+2. `src/ServiceProvider.php`:
+   - Boot method must load: Routes, Migrations, Views (namespace `statamic-ytlistr`), and Config.
+3. `src/Http/Controllers/Cp/SyncController.php`
+4. `src/Console/Commands/FetchLatestVideos.php`
+5. `src/Tags/YtListr.php` (Maps to {{ yt_listr }})
+6. `database/migrations/create_yt_listr_table.php`
+7. `resources/views/cp/index.blade.php` (Blade view for CP)
+8. `routes/cp.php`
+9. `config/statamic-ytlistr.php`
+
+FUNCTIONALITY:
+- Fetch YouTube videos via API (Uploads Playlist), save to DB, use Antlers to display.
+- NO Vue.js build steps. Use standard Blade for the Control Panel UI.
+- API Key and Channel ID should be pulled from the main app's .env file (referenced in the config).
+
+DELIVERABLES:
+1. Provide the content for the package's `composer.json`.
+2. Provide the PHP code for the ServiceProvider, Controller, Commands, Model, and Tag.
+3. Provide the Blade template for the CP.
+4. IMPORTANT: Tell me exactly what JSON to add to my MAIN application's `composer.json` to load this local package via a "path" repository.
+
+Write full real working code.
+
+
+
