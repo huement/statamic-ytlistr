@@ -78,13 +78,11 @@ class ServiceProvider extends BaseServiceProvider
 
   protected function bootAddonNav(): void
   {
-    Nav::extend(function ($nav) {
-      $nav
-        ->create('YouTube Listr')
-        ->section('Tools')
-        ->url(cp_route('statamic-ytlistr.index'))
-        ->icon('video');
-    });
+	  \Statamic\Facades\CP\Nav::extend(function ($nav) {
+          $nav->tools('YouTube Listr') // ⚡ MAGIC METHOD: Groups it properly under Tools
+              ->url(cp_route('statamic-ytlistr.index'))
+              ->icon('video');
+      });
   }
 
   protected function bootAddonTags(): void

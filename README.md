@@ -27,7 +27,7 @@ The package will automatically register itself with Statamic.
 ### Requirements
 
 - PHP ^8.1
-- Statamic CMS ^5.0
+- Statamic CMS ^5.0 || ^6.0
 
 ## Configuration
 
