@@ -122,8 +122,21 @@ Created and sponsored by [Huement.com](https://huement.com) - A software studio 
 
 - [GitHub Repository](https://github.com/huement/statamic-ytlistr)
 - [Packagist](https://packagist.org/packages/huement/statamic-ytlistr)
-- [Huement.com](https://huement.com)
+- [Huement.com Demo](https://huement.com/blog)
 
-## License
+#### Have you seen my comments plugin?
+I have a new Statamic 6+ Comments Plugin, called `StatComm`. It's pretty great! Check it out! 
 
-MIT
+- [StatComm Packagist](https://packagist.org/packages/huement/statcomm)
+- [StatComm GitHub Repository](https://github.com/huement/statcomm)
+
+### License & Sponsorship
+
+Distributed freely under the open-source **MIT License**. Maintained, optimized, and engineered / sponsored by **[HUEMENT](https://huement.com/)**.
+
+<p align="center">
+  <strong>If this software saved you time or a headache, consider keeping the engine running!</strong><br><br>
+  <a href='https://ko-fi.com/U1A7222617' target='_blank'>
+    <img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi6.png?v=6' border='0' alt='Buy Me a Coffee at ko-fi.com' />
+  </a>
+</p>
