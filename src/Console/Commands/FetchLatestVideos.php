@@ -2,7 +2,7 @@
 
 namespace Huement\StatamicYtListr\Console\Commands;
 
-use Huement\StatamicYtListr\Models\YtVideo;
+use Huement\StatamicYtListr\Repositories\VideoRepository;
 use Huement\StatamicYtListr\Services\YouTubeService;
 use Illuminate\Console\Command;
 
@@ -11,6 +11,9 @@ class FetchLatestVideos extends Command
   protected $signature = 'ytlistr:fetch {--limit=50 : Maximum number of videos to fetch}';
 
   protected $description = 'Fetch the latest videos from YouTube and sync to database';
+
+  // Declaring the property ensures $this->repository is defined
+  protected VideoRepository $repository;
 
   public function handle(): int
   {
@@ -26,6 +29,7 @@ class FetchLatestVideos extends Command
     }
 
     $this->info('Fetching videos from YouTube...');
+    $this->repository = app(VideoRepository::class);
 
     try {
       $service = new YouTubeService($apiKey, $channelId);
@@ -35,8 +39,8 @@ class FetchLatestVideos extends Command
       $updated = 0;
 
       foreach ($videos as $videoData) {
-        $video = YtVideo::updateOrCreate(
-          ['video_id' => $videoData['video_id']],
+        $video = $this->repository->updateOrCreate(
+          $videoData['video_id'],
           $videoData
         );
 

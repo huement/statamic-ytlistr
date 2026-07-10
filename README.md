@@ -55,43 +55,81 @@ php artisan ytlistr:fetch
 php artisan ytlistr:fetch --limit=100
 ```
 
-### Antlers Tags
+## Template Usage
+
+Statamic YouTube Listr is entirely template-engine and storage-driver agnostic. Whether your frontend is powered by **Antlers** or **Blade**, and whether your backend uses the **Database** or **Flat-File (YAML)** driver, your data maps will render perfectly.
+
+### 1. Antlers Templates
 
 ![Frontend Display Example](preview-frontend.png)
 _Display your YouTube videos beautifully on the frontend_
 
-List all videos:
+List and filter recent videos:
 
-```antlers
-{{ yt_listr }}
+```php
+{{ yt_listr limit="5" }}
     <h3>{{ title }}</h3>
     <img src="{{ thumbnail_url }}" alt="{{ title }}">
-    <p>{{ description }}</p>
+    <p>{{ duration_formatted }} | {{ view_count }} views</p>
     <a href="{{ youtube_url }}">Watch on YouTube</a>
 {{ /yt_listr }}
 ```
 
-Limit results:
+#### Get the Single Latest Video
 
-```antlers
-{{ yt_listr limit="5" }}
-    <div>{{ title }}</div>
-{{ /yt_listr }}
-```
-
-Get latest video:
-
-```antlers
+```php
 {{ yt_listr:latest }}
     <h2>{{ title }}</h2>
     <iframe src="{{ embed_url }}" frameborder="0" allowfullscreen></iframe>
 {{ /yt_listr:latest }}
 ```
 
-Get video count:
+#### Get total video count:
 
-```antlers
+```php
 Total videos: {{ yt_listr:count }}
+```
+
+### 2. Laravel Blade Templates
+
+If you are building your frontend templates using standard Laravel Blade, you have two ways to fetch and loop through your video entries safely.
+
+Approach A: Statamic Blade Components (Cleanest)
+Statamic registers an engine-level <s:tag> layout scheme that perfectly mirrors standard Antlers markup. It hooks up scopes and isolates variables automatically:
+
+```html
+<s:yt_listr:latest>
+    <h2>{{ $title }}</h2>
+    <p>{{ $duration_formatted }}</p>
+    <iframe src="{{ $embed_url }}" frameborder="0" allowfullscreen></iframe>
+</s:yt_listr:latest>
+```
+
+#### Approach B: Direct Service Container Binding
+
+If you prefer extracting data arrays straight into traditional Blade inline variables, resolve the contract binding from the container.
+
+**Crucial Optimization**: **ALWAYS** route parameters through Laravel's native `data_get()` wrapper. This guarantees that your loop evaluates keys correctly whether the active driver outputs a typed Database Eloquent Model Object or a raw flat-file YAML Data Array. If you dont do this, it will break your loops.
+
+```php
+@php
+    // Dynamically resolves DatabaseVideoRepository or YamlVideoRepository based on config
+    $repo = app(\Huement\StatamicYtListr\Repositories\VideoRepository::class);
+    $videos = $repo->recent(6); // Fetch the 6 most recent tracking records
+@endphp
+
+@foreach ($videos as $video)
+    <a href="{{ data_get($video, 'youtube_url') }}" target="_blank" rel="noopener">
+        <img src="{{ data_get($video, 'thumbnail_url') }}" alt="{{ data_get($video, 'title') }}">
+
+        <h3>{{ data_get($video, 'title') }}</h3>
+
+        <div>
+            <span>Duration: {{ gmdate('i:s', (int) data_get($video, 'duration', 0)) }}</span>
+            <span>Views: {{ number_format((int) data_get($video, 'view_count', 0)) }}</span>
+        </div>
+    </a>
+@endforeach
 ```
 
 ## Available Data
@@ -125,7 +163,8 @@ Created and sponsored by [Huement.com](https://huement.com) - A software studio 
 - [Huement.com Demo](https://huement.com/blog)
 
 #### Have you seen my comments plugin?
-I have a new Statamic 6+ Comments Plugin, called `StatComm`. It's pretty great! Check it out! 
+
+I have a new Statamic 6+ Comments Plugin, called `StatComm`. It's pretty great! Check it out!
 
 - [StatComm Packagist](https://packagist.org/packages/huement/statcomm)
 - [StatComm GitHub Repository](https://github.com/huement/statcomm)

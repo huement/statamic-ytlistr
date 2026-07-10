@@ -2,7 +2,7 @@
 
 namespace Huement\StatamicYtListr\Http\Controllers\Cp;
 
-use Huement\StatamicYtListr\Models\YtVideo;
+use Huement\StatamicYtListr\Repositories\VideoRepository;
 use Huement\StatamicYtListr\Services\YouTubeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
@@ -11,20 +11,27 @@ use Statamic\Http\Controllers\CP\CpController;
 
 class SyncController extends CpController
 {
+  protected VideoRepository $repository;
+
+  public function __construct(VideoRepository $repository)
+  {
+    $this->repository = $repository;
+  }
+
   public function index(): View
   {
-    $videos = YtVideo::recent()->paginate(20);
-    $config = config('statamic-ytlistr');
-    $isConfigured = !empty($config['api_key']) && !empty($config['channel_id']);
+      $videos = $this->repository->recentPaginated(20);
+      $config = config('statamic-ytlistr');
+      $isConfigured = !empty($config['api_key']) && !empty($config['channel_id']);
 
-    $lastSyncVideo = YtVideo::latest('updated_at')->first();
-    $lastSync = $lastSyncVideo ? $lastSyncVideo->updated_at : null;
+      // FIXED: The repository now returns a clean Carbon instance or null directly!
+      $lastSync = $this->repository->findLatestUpdatedAt();
 
-    return view('statamic-ytlistr::cp.index', [
-      'videos' => $videos,
-      'isConfigured' => $isConfigured,
-      'lastSync' => $lastSync,
-    ]);
+      return view('statamic-ytlistr::cp.index', [
+          'videos' => $videos,
+          'isConfigured' => $isConfigured,
+          'lastSync' => $lastSync,
+      ]);
   }
 
   public function sync(): RedirectResponse
@@ -41,8 +48,8 @@ class SyncController extends CpController
 
       $synced = 0;
       foreach ($videos as $videoData) {
-        YtVideo::updateOrCreate(
-          ['video_id' => $videoData['video_id']],
+        $this->repository->updateOrCreate(
+          $videoData['video_id'],
           $videoData
         );
         $synced++;
@@ -60,9 +67,9 @@ class SyncController extends CpController
     }
   }
 
-  public function destroy(YtVideo $video): RedirectResponse
+  public function destroy(string $videoId): RedirectResponse
   {
-    $video->delete();
+    $this->repository->delete($videoId);
 
     return redirect()
       ->route('statamic.cp.statamic-ytlistr.index')
